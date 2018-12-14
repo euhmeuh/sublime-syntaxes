@@ -1,0 +1,132 @@
+%YAML 1.2
+---
+# Simplified syntax for any Forth-like language.
+# Inspired from "forth.lang" in the GtkSourceView project.
+name: Forth
+file_extensions:
+  - fs
+  - fth
+  - f4
+scope: source.forth
+contexts:
+  main:
+    - include: comments
+    - include: preprocessors
+    - include: definitions
+    - include: strings
+    - include: keywords
+    - include: locals
+    - include: numbers
+
+  comments:
+    - include: line-comments
+    - include: paren-comments
+    - include: block-comments
+    - include: doc-comments
+    - include: debug-comments
+
+  strings:
+    - include: s-strings
+    - include: tilde-strings
+    - include: comment-strings
+    - include: error-strings
+
+  definitions:
+    - match: (?<![^\s])(?i:POSTPONE|\[COMPILE\]|\[CHAR\]|\['\]|COMPILE|CHAR|[DFT]?VALUE|[2FT]?VARIABLE|[DS]?FVARIABLE|[T]?USER|[T]?CODE|[DZFT]?LOCAL|[2FT]?CONSTANT|TCONSTANT-|TSUB|=\:|==\:|DEFER|HC\:|[VHTM]?\:)\s+[^\s]+(?![^\s])
+      scope: storage.type.forth
+
+  locals:
+    - match: (?<![^\s])(?i:[DFZ]?LOCALS)\|\s+[^\|]+[\|](?![^\s])
+      scope: variable.locals.forth
+
+  keywords:
+    - match: (?<![^\s])(?i:\[IF\]|\[ELSE\]|\[THEN\]|\[DEFINED\]|\[UNDEFINED\]|\?DEF|\?UNDEF|THROW|CASE|ENDCASE|OF|ENDOF|FOR|NEXT|IF[,]?|ELSE[,]?|THEN[,]?|ENDIF[,]?|BEGIN[,]?|WHILE[,]?|REPEAT[,]?|UNTIL[,]?|AGAIN[,]?|DO|LOOP|\?DO|\+LOOP|LEAVE|\?LEAVE|UNLOOP|EXIT|\?EXIT|PAR|ENDPAR|STARTP|ENDP|PRIVATE|PRIVATES|DEPRIVE|FORGET|IMMEDIATE|ALSO|ONLY|FORTH|DEFINITIONS|HEADERLESS|\:ABOUT|DOES>|FORGET>|CREATE|\:NONAME|;)(?![^\s])
+      scope: keyword.control.forth
+
+  s-strings:
+    - match: (?<![^\s])(?i:S|[.]|EVAL|C|Z|,)"\s
+      scope: punctuation.definition.string.begin.forth
+      push:
+        - meta_scope: string.quoted.double.forth
+        - match: (")\s
+          scope: punctuation.definition.string.end.forth
+          pop: true
+
+  tilde-strings:
+    - match: (?<![^\s])(\.~)\s
+      scope: punctuation.definition.string.begin.forth
+      push:
+        - meta_scope: string.tilde.forth
+        - match: (~)
+          scope: punctuation.definition.string.end.forth
+          pop: true
+
+  comment-strings:
+    - match: (?<![^\s])(\.\()\s
+      scope: punctuation.definition.string.begin.forth
+      push:
+        - meta_scope: string.comment.forth
+        - match: \)
+          scope: punctuation.definition.string.end.forth
+          pop: true
+
+  error-strings:
+    - match: (?<![^\s])(?i:ABORT|\?ERROR)"\s
+      scope: punctuation.definition.string.begin.forth
+      push:
+        - meta_scope: string.error.forth
+        - match: (")\s
+          scope: punctuation.definition.string.end.forth
+          pop: true
+
+  numbers:
+    - match: (?<![^\s])([$][-+]?[A-F0-9.]+|[#][-+]?[0-9.]+|[%][-+]?[0-1.]+|[-+]?[0-9.]+|[-+]?[0-9]+[.]?[0-9]*[eE][0-9]*|'[^\s]'|[\^][A-Za-z]|TRUE|FALSE)(?![^\s])
+      scope: constant.numeric.forth
+
+  preprocessors:
+    - match: (?<![^\s])(?i:NEEDS|INCLUDE|IN|MARKER)\s+[^\s]*(?![^\s])
+      scope: meta.preprocessor.forth
+    - match: (?<![^\s])(?i:REVISION)\s+[^\s]*\s*".*"(?![^\s])
+      scope: meta.preprocessor.forth
+    - match: (?<![^\s])(?i:INCLUDED|INCLUDE-FILE)(?![^\s])
+      scope: meta.preprocessor.forth
+    - match: (?<![^\s])(\[)(?![^\s])
+      push:
+        - meta_scope: meta.preprocessor.forth
+        - match: (?<![^\s])(\])(?![^\s])
+          pop: true
+
+  line-comments:
+    - match: (?<![^\s])(?i:\\|\\G)(?![^\s])
+      push:
+        - meta_scope: comment.line.forth
+        - match: \n
+          pop: true
+
+  paren-comments:
+    - match: (?<![^\s])(?i:\(|\(S|\(F)(?![^\s])
+      push:
+        - meta_scope: comment.block.forth
+        - match: \)
+          pop: true
+
+  block-comments:
+    - match: (?<![^\s])\(\*(?![^\s])
+      push:
+        - meta_scope: comment.block.forth
+        - match: \*\)(?![^\s])
+          pop: true
+
+  doc-comments:
+    - match: (?<![^\s])(?i:DOC)(?![^\s])
+      push:
+        - meta_scope: comment.block.doc.forth
+        - match: (?<![^\s])(?i:ENDDOC)(?![^\s])
+          pop: true
+
+  debug-comments:
+    - match: (?<![^\s])(?i:<<DEBUG)(?![^\s])
+      push:
+        - meta_scope: comment.block.debug.forth
+        - match: (?<![^\s])(?i:DEBUG>>)(?![^\s])
+          pop: true
